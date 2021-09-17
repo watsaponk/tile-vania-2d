@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -8,9 +7,11 @@ public class PlayerMovement : MonoBehaviour
 
     private Animator m_Animator;
     private Rigidbody2D m_Rigidbody2D;
-    private bool m_IsJumping = false;
+    private bool m_IsJumping;
     
     private static readonly int Running = Animator.StringToHash("Running");
+    private static readonly int Falling = Animator.StringToHash("Falling");
+    private static readonly int Jumping = Animator.StringToHash("Jumping");
 
     private void Start()
     {
@@ -22,6 +23,23 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleRunning();
         HandleJumping();
+        HandleFalling();
+    }
+
+    #region Jumping
+
+    private void HandleFalling()
+    {
+        var yVelocity = m_Rigidbody2D.velocity.y;
+        
+        if (yVelocity > 0) return;
+
+        UpdateFallingAnim(yVelocity < 0);
+    }
+
+    private void UpdateFallingAnim(bool isFalling)
+    {
+        m_Animator.SetBool(Falling, isFalling);
     }
 
     private void HandleJumping()
@@ -35,17 +53,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateJumpingAnim()
     {
-        m_Animator.SetBool("Jumping", m_IsJumping);
+        m_Animator.SetBool(Jumping, m_IsJumping);
     }
 
     private void OnCollisionEnter2D(Collision2D other)
     {
-        if (other.gameObject.CompareTag("Ground"))
-        {
-            m_IsJumping = false;
-            UpdateJumpingAnim();
-        }
+        if (!other.gameObject.CompareTag("Ground")) return;
+        m_IsJumping = false;
+        UpdateJumpingAnim();
     }
+    
+    #endregion
 
     #region Running
     private void HandleRunning()

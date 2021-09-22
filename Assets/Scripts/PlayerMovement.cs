@@ -129,11 +129,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleRunning()
     {
-        if (!_isJumping)
-        {
-            _rigidbody.AddForce(Vector2.right * _xDirection);
-            _rigidbody.velocity = new Vector2(_xDirection * speed, _rigidbody.velocity.y);
-        }
+        _rigidbody.AddForce(Vector2.right * _xDirection);
+        _rigidbody.velocity = new Vector2(_xDirection * speed, _rigidbody.velocity.y);
 
         if (_xDirection == 0 && !_isJumping)
         {

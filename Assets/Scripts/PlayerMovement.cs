@@ -4,6 +4,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float speed = 10;
     [SerializeField] private float maxSpeed = 15;
+    [SerializeField] private LayerMask groundLayer;
 
     [Header("Vertical Movement")] public float jumpSpeed = 15f;
     public float jumpDelay = 0.25f;
@@ -12,11 +13,12 @@ public class PlayerMovement : MonoBehaviour
     [Header("Physics")] public float linearDrag = 4f;
     public float gravity = 1f;
     public float fallMultiplier = 5f;
+    public float groundLength = 0.6f;
 
     private Animator _animator;
     private Rigidbody2D _rigidbody;
-    private bool _isJumping = true;
     private float _xDirection;
+    private bool _isOnGround;
 
     private static readonly int Running = Animator.StringToHash("Running");
     private static readonly int Falling = Animator.StringToHash("Falling");
@@ -30,6 +32,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        _isOnGround = Physics2D.Raycast(transform.position, Vector2.down, groundLength, groundLayer);
         _xDirection = Input.GetAxis("Horizontal");
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -41,8 +44,8 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         HandleRunning();
-        
-        if (_jumpTimer > Time.time && !_isJumping)
+
+        if (_jumpTimer > Time.time && _isOnGround)
         {
             HandleJumping();
         }
@@ -54,8 +57,8 @@ public class PlayerMovement : MonoBehaviour
     {
         var velocity = _rigidbody.velocity;
         var changingDirections = (_xDirection > 0 && velocity.x < 0) || (_xDirection < 0 && velocity.x > 0);
-
-        if (!_isJumping)
+        
+        if (_isOnGround)
         {
             if (Mathf.Abs(_xDirection) < 0.4f || changingDirections)
             {
@@ -80,20 +83,34 @@ public class PlayerMovement : MonoBehaviour
             {
                 _rigidbody.gravityScale = gravity * (fallMultiplier / 2);
             }
-            HandleFalling();
         }
+        
+        HandleVerticalMovementAnimation();
     }
 
 
     #region Jumping
 
-    private void HandleFalling()
+    private void HandleVerticalMovementAnimation()
     {
+        if (_isOnGround)
+        {
+            UpdateJumpingAnim(false);
+            UpdateFallingAnim(false);
+            return;
+        }
+        
         var yVelocity = _rigidbody.velocity.y;
-
-        if (yVelocity > 0) return;
-
-        UpdateFallingAnim(yVelocity < 0);
+        if (yVelocity > 0)
+        {
+            UpdateJumpingAnim(true);
+            UpdateFallingAnim(false);
+        }
+        else
+        {
+            UpdateJumpingAnim(false);
+            UpdateFallingAnim(true);
+        }
     }
 
     private void UpdateFallingAnim(bool isFalling)
@@ -106,21 +123,18 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, 0);
         _rigidbody.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
         _jumpTimer = 0;
-        _isJumping = true;
-        UpdateJumpingAnim();
     }
 
-    private void UpdateJumpingAnim()
+    private void UpdateJumpingAnim(bool isJumping)
     {
-        _animator.SetBool(Jumping, _isJumping);
+        _animator.SetBool(Jumping, isJumping);
     }
 
-    private void OnCollisionEnter2D(Collision2D other)
+    private void OnDrawGizmos()
     {
-        if (!other.gameObject.CompareTag("Ground")) return;
-        _isJumping = false;
-        UpdateJumpingAnim();
-        UpdateFallingAnim(false);
+        Gizmos.color = Color.red;
+        var position = transform.position;
+        Gizmos.DrawLine(position, position + Vector3.down * groundLength);
     }
 
     #endregion
@@ -132,7 +146,7 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody.AddForce(Vector2.right * _xDirection);
         _rigidbody.velocity = new Vector2(_xDirection * speed, _rigidbody.velocity.y);
 
-        if (_xDirection == 0 && !_isJumping)
+        if (_xDirection == 0 && _isOnGround)
         {
             _rigidbody.velocity = new Vector2(0, _rigidbody.velocity.y);
         }

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1866124153312255750}
   - component: {fileID: 599389840}
   - component: {fileID: 599389839}
+  - component: {fileID: 909809729}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -124,7 +125,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!70 &599389839
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -138,6 +139,29 @@ CapsuleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.016597271, y: -0.12845415}
-  m_Size: {x: 0.5684643, y: 0.75898194}
+  m_Offset: {x: 0.013039589, y: -0.14624083}
+  m_Size: {x: 0.63249683, y: 0.7234086}
   m_Direction: 0
+--- !u!114 &909809729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866124153312255745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 017f98857b881c242924c8f1618c882b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 50
+  maxSpeed: 10
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  jumpSpeed: 15
+  jumpDelay: 0.25
+  linearDrag: 4
+  gravity: 1
+  fallMultiplier: 5
+  groundLength: 0.56

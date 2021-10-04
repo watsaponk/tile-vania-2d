@@ -14,11 +14,12 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = 1f;
     public float fallMultiplier = 5f;
     public float groundLength = 0.6f;
+    public Vector3 collisionOffset;
 
     private Animator _animator;
     private Rigidbody2D _rigidbody;
     private float _xDirection;
-    private bool _isOnGround;
+    [SerializeField] private bool _isOnGround;
 
     private static readonly int Running = Animator.StringToHash("Running");
     private static readonly int Falling = Animator.StringToHash("Falling");
@@ -32,32 +33,43 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        _isOnGround = Physics2D.Raycast(transform.position, Vector2.down, groundLength, groundLayer);
+        var isLeftFootOnGround = CheckFootOnGround(-1);
+        var isRightFootOnGround = CheckFootOnGround(1);
+        _isOnGround = isLeftFootOnGround || isRightFootOnGround;
         _xDirection = Input.GetAxis("Horizontal");
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && _isOnGround)
         {
             _jumpTimer = Time.time + jumpDelay;
         }
     }
 
+    private bool CheckFootOnGround(float side)
+    {
+        return Physics2D.Raycast(
+            origin: (transform.position + collisionOffset) * side,
+            direction: Vector2.down,
+            distance: groundLength,
+            layerMask: groundLayer
+        );
+    }
+
     private void FixedUpdate()
     {
+        ModifyPhysics();
         HandleRunning();
 
-        if (_jumpTimer > Time.time && _isOnGround)
+        if (_jumpTimer > Time.time)
         {
             HandleJumping();
         }
-
-        ModifyPhysics();
     }
 
     void ModifyPhysics()
     {
         var velocity = _rigidbody.velocity;
         var changingDirections = (_xDirection > 0 && velocity.x < 0) || (_xDirection < 0 && velocity.x > 0);
-        
+
         if (_isOnGround)
         {
             if (Mathf.Abs(_xDirection) < 0.4f || changingDirections)
@@ -84,7 +96,7 @@ public class PlayerMovement : MonoBehaviour
                 _rigidbody.gravityScale = gravity * (fallMultiplier / 2);
             }
         }
-        
+
         HandleVerticalMovementAnimation();
     }
 
@@ -99,7 +111,7 @@ public class PlayerMovement : MonoBehaviour
             UpdateFallingAnim(false);
             return;
         }
-        
+
         var yVelocity = _rigidbody.velocity.y;
         if (yVelocity > 0)
         {
@@ -134,7 +146,8 @@ public class PlayerMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
         var position = transform.position;
-        Gizmos.DrawLine(position, position + Vector3.down * groundLength);
+        Gizmos.DrawLine(position + collisionOffset, position + collisionOffset + Vector3.down * groundLength);
+        Gizmos.DrawLine(position - collisionOffset, position - collisionOffset + Vector3.down * groundLength);
     }
 
     #endregion
